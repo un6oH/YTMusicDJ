@@ -1,7 +1,3 @@
-import Essentia from 'https://cdn.jsdelivr.net/npm/essentia.js@0.1.3/dist/essentia.js-core.es.js';
-// import essentia-wasm-module
-import { EssentiaWASM } from 'https://cdn.jsdelivr.net/npm/essentia.js@0.1.3/dist/essentia-wasm.es.js';
-
 const identity = {
   access_token: ACCESS_TOKEN
 };
@@ -11,14 +7,8 @@ let defaultPlaylists;
 let defaultSongs = undefined;
 const MAX_SONGS = 1;
 
+let selectedPlaylist;
 const songs = [];
-  
-const essentia = new Essentia(EssentiaWASM);
-// prints version of essentia wasm backend
-console.log("Made with Essentia version", essentia.version);
-const audioCtx = new AudioContext();
-
-const audioDownloadQuality = 64;
 
 const loginBtn = document.getElementById('login-btn');
 
@@ -230,16 +220,7 @@ function analyseSongs() {
 }
 
 async function downloadAudio(url, callback) {
-  ytmp3(url, audioDownloadQuality)
-    .then(result => {
-      if (result.status) {
-        console.log('Download Link:', result.download);
-        console.log('Metadata:', result.metadata);
-        callback();
-      } else {
-        console.error('Error:', result.result);
-      }
-    });
+  
 }
 
 main();
