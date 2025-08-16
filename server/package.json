@@ -12,11 +12,11 @@
   "dependencies": {
     "cors": "^2.8.5",
     "date-fns": "^2.23.0",
-    "essentia.js": "0.0.9",
+    "essentia.js": "0.1.3",
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
     "uuid": "^8.3.2",
-    "youtube-downloader-cc-api": "^1.0.4"
+    "youtube-dl-exec": "^3.0.24"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"
