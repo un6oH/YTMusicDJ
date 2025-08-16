@@ -5,7 +5,7 @@ let loggedIn = false;
 
 let defaultPlaylists;
 let defaultSongs = undefined;
-const MAX_SONGS = 1;
+const MAX_SONGS = 5;
 
 let selectedPlaylist;
 const songs = [];
@@ -212,10 +212,11 @@ function clearSongs() {
 }
 
 function analyseSongs() {
-  for (let i = 0; i < songs.length && i < MAX_SONGS; i++) {
+  const limit = Math.min(songs.length, MAX_SONGS);
+  for (let i = 0; i < limit; i++) {
     const videoId = songs[i].snippet.resourceId.videoId;
 
-    console.log("videoId", videoId);
+    console.log(`videoId: ${videoId} (${i+1}/${limit}})`)
     const url = new URL("http://localhost:3001/analyse");
     url.search = new URLSearchParams({
       id: videoId
@@ -223,7 +224,7 @@ function analyseSongs() {
 
     fetch(url).then((response) => response.json())
       .then((data) => {
-        console.log(`analysed song id: ${videoId}`, "features", data);
+        console.log(`analysed song id: ${videoId}`, "features:", data);
       })
       .catch(error => {
         console.error('error analysing song', error);
