@@ -9,15 +9,16 @@ let loggedIn = false;
 
 let defaultPlaylists;
 let defaultSongs = undefined;
-const MAX_SONGS = 10;
+const MAX_SONGS = 1;
 
 const songs = [];
   
 const essentia = new Essentia(EssentiaWASM);
 // prints version of essentia wasm backend
-console.log("Made with Essentia", essentia.version);
-
+console.log("Made with Essentia version", essentia.version);
 const audioCtx = new AudioContext();
+
+const audioDownloadQuality = 64;
 
 const loginBtn = document.getElementById('login-btn');
 
@@ -222,12 +223,23 @@ function clearSongs() {
 
 function analyseSongs() {
   for (let i = 0; i < songs.length && i < MAX_SONGS; i++) {
-    
+    const videoId = songs[0].snippet.resourceId.videoId;
+    const url = "https://www.youtube.com/watch?v=" + videoId;
+    downloadAudio(url, () => console.log("video downloaded"));
   }
 }
 
-async function downloadAudio(id, callback) {
-  
+async function downloadAudio(url, callback) {
+  ytmp3(url, audioDownloadQuality)
+    .then(result => {
+      if (result.status) {
+        console.log('Download Link:', result.download);
+        console.log('Metadata:', result.metadata);
+        callback();
+      } else {
+        console.error('Error:', result.result);
+      }
+    });
 }
 
 main();
