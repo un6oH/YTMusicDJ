@@ -3,16 +3,34 @@
   <head>
     <title>YT Music DJ</title>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
     <h1>YT Music DJ</h1>
     <button id="login-btn">Login with Google (YouTube Access)</button>
     <pre id="result"></pre>
-    <button id="get-user-playlists">Get your playlists</button>
-    <h2>Your playlists:</h2>
-    <ul id="playlists"></ul>
+    <section>
+      <article>
+        <h2>Your playlists:</h2>
+        <button id="get-user-playlists">Load your playlists</button>
+        <ul id="playlists"></ul>
+      </article>
+      <article>
+        <h2>Songs: <span id="song-count"></span></h2>
+        <button id="get-songs">Add songs</button>
+        <button id="analyse-songs">Analyse songs</button>
+        <button id="clear-songs">Clear list</button>
+        <ul id="songs"></ul>
+      </article>
+      <article>
+        <h2>New playlist:</h2>
+        <button id="generate-playlist">Generate playlist</button>
+        <button id="add-playlist">Add playlist to account</button>
+        <ul id="songs-new"></ul>
+      </article>
+    </section>
   </body>
   <script src="test.js"></script>
-  <script src="main.js"></script>
+  <script src="main.js" type="module"></script>
 </html>

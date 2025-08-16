@@ -1,0 +1,15 @@
+.list-playlist:hover {
+  background-color: lightgray;
+}
+
+.list-selected {
+  background-color: lightgreen;
+}
+
+.list-selected:hover {
+  background-color: lightgreen;
+}
+
+section {
+  display: flex;
+}
