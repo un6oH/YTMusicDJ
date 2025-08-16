@@ -1,5 +1,3 @@
-const CLIENT_ID = '1018980222004-m7pfvifsgidmr0eenre5epusasm8pvov.apps.googleusercontent.com';
-
 const identity = {};
 let loggedIn = false;
 
