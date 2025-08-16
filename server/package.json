@@ -10,9 +10,13 @@
   "author": "",
   "license": "",
   "dependencies": {
+    "cors": "^2.8.5",
     "date-fns": "^2.23.0",
+    "essentia.js": "0.0.9",
     "express": "^5.1.0",
-    "uuid": "^8.3.2"
+    "fs": "^0.0.1-security",
+    "uuid": "^8.3.2",
+    "youtube-downloader-cc-api": "^1.0.4"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"

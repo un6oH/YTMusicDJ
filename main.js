@@ -5,7 +5,7 @@ let loggedIn = false;
 
 let defaultPlaylists;
 let defaultSongs = undefined;
-const MAX_SONGS = 1;
+const MAX_SONGS = 5;
 
 let selectedPlaylist;
 const songs = [];
@@ -213,13 +213,27 @@ function clearSongs() {
 
 function analyseSongs() {
   for (let i = 0; i < songs.length && i < MAX_SONGS; i++) {
-    const videoId = songs[0].snippet.resourceId.videoId;
-    const url = "https://www.youtube.com/watch?v=" + videoId;
-    downloadAudio(url, () => console.log("video downloaded"));
+    const id = songs[i].id;
+    const videoId = songs[i].snippet.resourceId.videoId;
+
+    const url = new URL("http://localhost:3001/analyse");
+    url.search = new URLSearchParams({
+      id: id, 
+      url: "https://youtu.be/" + videoId
+    }).toString();
+
+    fetch(url).then((response) => response.json())
+      .then((data) => {
+        console.log(`analysed song id: ${id}`, "features", data);
+      })
+      .catch(error => {
+        console.error('error analysing song', error);
+        return;
+      });
   }
 }
 
-async function downloadAudio(url, callback) {
+async function downloadAudio(id, videoId, callback) {
   
 }
 
