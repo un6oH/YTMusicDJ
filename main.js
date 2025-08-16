@@ -1,4 +1,10 @@
-const identity = {};
+import Essentia from 'https://cdn.jsdelivr.net/npm/essentia.js@0.1.3/dist/essentia.js-core.es.js';
+// import essentia-wasm-module
+import { EssentiaWASM } from 'https://cdn.jsdelivr.net/npm/essentia.js@0.1.3/dist/essentia-wasm.es.js';
+
+const identity = {
+  access_token: ACCESS_TOKEN
+};
 let loggedIn = false;
 
 let defaultPlaylists;
@@ -13,7 +19,7 @@ console.log("Made with Essentia", essentia.version);
 
 const audioCtx = new AudioContext();
 
-const loginBtn = document.getElementById('login-Btn');
+const loginBtn = document.getElementById('login-btn');
 
 function main() {
   fetch("playlists.json")
