@@ -9,7 +9,7 @@ let loggedIn = false;
 
 let defaultPlaylists;
 let defaultSongs = undefined;
-const MAX_SONGS = 10;
+const MAX_SONGS = 1;
 
 const songs = [];
   
@@ -222,12 +222,19 @@ function clearSongs() {
 
 function analyseSongs() {
   for (let i = 0; i < songs.length && i < MAX_SONGS; i++) {
-    
+    const song = songs[i];
+
   }
 }
 
-async function downloadAudio(id, callback) {
-  
+async function requestAnalysis(url) {
+  const response = await fetch("http://localhost:8000/analyse", {
+    method: "POST", 
+    headers: {"Content-type": "application/json"}, 
+    body: JSON.stringify({ youtube_url: url })
+  });
+  const data = await response.json();
+  console.log(data);
 }
 
 main();
