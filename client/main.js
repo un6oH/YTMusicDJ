@@ -5,7 +5,7 @@ let loggedIn = false;
 
 let defaultPlaylists;
 let defaultSongs = undefined;
-const MAX_SONGS = 5;
+const MAX_SONGS = 1;
 
 let selectedPlaylist;
 const songs = [];

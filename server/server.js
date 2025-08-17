@@ -18,11 +18,14 @@ import ytdl from 'youtube-dl-exec';
 import Essentia from 'essentia.js/dist/essentia.js-core.es.js';
 // import essentia-wasm backend
 import { EssentiaWASM } from 'essentia.js/dist/essentia-wasm.es.js';
-import { TensorflowMusiCNN, EssentiaTFInputExtractor }  from 'essentia.js/dist/essentia.js-model.es.js';
+// import { TensorflowMusiCNN, EssentiaTensorflowInputExtractor }  from 'essentia.js/dist/essentia.js-model.es.js';
 // import tfPkg from '@tensorflow/tfjs';
 // const { tf } = tfPkg;
 import * as tf from '@tensorflow/tfjs';
-import { decode } from 'wav-decoder';
+import wav from 'node-wav';
+
+import ModelsWrapper from './utils/ModelsWrapper.js';
+import modelsAudioPreprocess from './utils/modelsAudioPreprocess.js';
 
 let essentia = null;
 essentia = new Essentia(EssentiaWASM);
@@ -31,7 +34,6 @@ console.log("Powered by Essentia.js v." + essentia.version);
 const __dirname = path.resolve();
 
 const port = process.env.PORT || 3001;
-const downloadQuality = '64';
 
 const app = express();
 
@@ -68,23 +70,24 @@ app.get('/analyse', (req, res) => {
 
 async function download(id, callback) {
   const url = "https://www.youtube.com/watch?v=" + id;
-  if (downloadedIDs.includes(id)) {
-    console.log("audio already downloaded.");
-    read(path.join(__dirname, "audio", `${id}.mp4`), callback);
-    return;
-  }
+  // if (downloadedIDs.includes(id)) {
+  //   console.log("audio already downloaded.");
+  //   read(path.join(__dirname, "audio", `${id}.wav`), callback);
+  //   return;
+  // }
 
   console.log("downloading audio from video id:", id);
   ytdl(url, {
-    format: "worstaudio",
-    ffmpegLocation: "C:\\Users\\limho\\Apps\\YoutubeDownloader\\ffmpeg.exe",
+    extractAudio: true, 
+    audioFormat: 'wav', 
+    audioQuality: "0", 
     output: path.join(__dirname, "audio/%(id)s.%(ext)s"), 
   })
     .then(output => {
-      // console.log(output)
+      console.log(output);
       downloadedIDs.push(id);
-      const dir = path.join(__dirname, `audio/${id}.mp4`)
-      console.log("audio downloaded at: audio/" + id + ".mp4");
+      const dir = path.join(__dirname, `audio/${id}.wav`)
+      console.log("audio downloaded at: audio/" + id + ".wav");
       try {
         read(dir, callback);
       } catch (error) {
@@ -111,24 +114,41 @@ const models = {
 }
 
 let extractor = null;
-const musiCNNs = {
-  danceability: new TensorflowMusiCNN(tf, './models/danceability-musicnn-msd-2', true)
-}
+// const musiCNNs = {
+//   danceability: new TensorflowMusiCNN(tf, './models/danceability-musicnn-msd-2', true)
+// }
 
 const frameSize = 2048;
 const hopSize = 512;
 
-async function read(path, callback) {
-  let audioBuffer;
+const options = {
+  defer: true
+};
+const musicnnWrapper = new ModelsWrapper('musicnn', EssentiaWASM);
+const modelPath = './models/danceability-musicnn-msd-2/model.json/';
 
-  fs.readFile(path, (err, data) => {
-    if (err) {
-      callback(null, {
-        type: "Reading file", 
-        error: err
-      });
-      return;
-    }
+async function read(path, callback) {
+  Promise.all( [fs.readFile(path), musicnnWrapper.loadModel(modelPath)] )
+    .then((responses) => {
+      const audioFileBuffer = responses[0];
+      const preprocessedAudio = modelsAudioPreprocess(audioFileBuffer);
+      musicnnWrapper.extractFeatures(preprocessedAudio);
+      musicnnWrapper.makePrediction()
+        .then(result => {
+          console.log(`Made prediction from ${path}:`, result);
+        });
+    })
+
+  // fs.readFile(path, (err, data) => {
+  //   if (err) {
+  //     callback(null, {
+  //       type: "Reading file", 
+  //       error: err
+  //     });
+  //     return;
+  //   }
+
+  //   decode(data);
 
     // const inputSignalVector = essentia.arrayToVector(audioBuffer);
     
@@ -149,13 +169,13 @@ async function read(path, callback) {
     // let pitches = essentia.vectorToArray(outputPyYin.pitch);
     // let voicedProbabilities = essentia.vectorToArray(outputPyYin.voicedProbabilities);
     // callback({replayGain, pitches, voicedProbabilities});
-  });
+  // });
 }
 
 async function decode(data) {
   extractor = new EssentiaTFInputExtractor(EssentiaWASM, "musicnn", false);
-  audioBuffer = data;
-  const audioData = await decode(audioBuffer);
+  const audioBuffer = data;
+  const audioData = await wav.decode(audioBuffer);
   const channelData = audioData.channelData[0];
 
   const spectrumFrames = essentia.FrameGenerator(channelData, frameSize, hopSize, true)
