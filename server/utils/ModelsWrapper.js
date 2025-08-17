@@ -1,6 +1,8 @@
 // import * as EssentiaModel from 'essentia.js/dist/essentia.js-model.es.js';
-import { TensorflowMusiCNN, EssentiaTFInputExtractor, TensorflowVGGish } from 'essentia.js/dist/essentia.js-model.es.js';
-import tf from "@tensorflow/tfjs-node";
+// import { TensorflowMusiCNN, EssentiaTFInputExtractor, TensorflowVGGish } from 'essentia.js/dist/essentia.js-model.es.js';
+// import tf from "@tensorflow/tfjs-node";
+const EssentiaModel = require('essentia.js/dist/essentia.js-model.umd.js')
+const tf = require('@tensorflow/tfjs-node');
 
 class ModelsWrapper {
     constructor(arch, EssentiaWASM /*, EssentiaModel*/) { 
@@ -12,7 +14,7 @@ class ModelsWrapper {
             melBandsSize: 0,
             patchSize: 0
         };
-        this.extractor = new EssentiaTFInputExtractor(EssentiaWASM, arch);
+        this.extractor = new EssentiaModel.EssentiaTFInputExtractor(EssentiaWASM, arch);
         this.wasm = EssentiaWASM;
         this.essentia = this.extractor.essentia;
         switch (arch) {
@@ -38,10 +40,10 @@ class ModelsWrapper {
         // console.log(`Using ${tf.getBackend()} backend`);
         switch (this.architecture) {
             case "musicnn":
-                this.engine = new TensorflowMusiCNN(tf, url);
+                this.engine = new EssentiaModel.TensorflowMusiCNN(tf, url);
                 break;
             case "vggish":
-                this.engine = new TensorflowVGGish(tf, url);
+                this.engine = new EssentiaModel.TensorflowVGGish(tf, url);
                 break;
         }
         await this.engine.initialize();
@@ -80,4 +82,4 @@ class ModelsWrapper {
 }
 
 
-export default ModelsWrapper;
+// export default ModelsWrapper;

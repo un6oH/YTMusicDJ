@@ -1,6 +1,8 @@
-import wav from "node-wav";
+// import wav from "node-wav";
+const wav = require('node-wav');
 
-export default function preprocess (buffer) {
+// export default function preprocess (buffer) {
+function preprocess (buffer) {
     if (buffer instanceof Buffer) {
         // decode buffer of binary data
         const audioBuffer = wav.decode(buffer);

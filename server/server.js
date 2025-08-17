@@ -1,37 +1,38 @@
-// const express = require('express');
-// const path = require('path');
-// const cors = require('cors');
-// const fs = require('fs');
-// let esPkg = require('essentia.js');
-// const ytdl = require('youtube-dl-exec');
-// const axios = require('axios');
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+const ytdl = require('youtube-dl-exec');
+const fs = require('fs');
+const wav = require('node-wav');
 
-// const Essentia = require('essentia.js/dist/essentia.js-core.umd.js');
-// const wasmModule = require('essentia.js/dist/essentia-wasm.umd.js');
+const EssentiaWASM = require('essentia.js/dist/essentia-wasm.umd.js');
+const Essentia = require('essentia.js/dist/essentia.js-core.umd.js');
+const tf = require('@tensorflow/tfjs-node');
 
-import express from 'express';
-import path from 'path';
-import cors from 'cors'
-import fs from 'fs';
-import ytdl from 'youtube-dl-exec';
+// import express from 'express';
+// import path from 'path';
+// import cors from 'cors'
+// import fs from 'fs';
+// import ytdl from 'youtube-dl-exec';
 
-import Essentia from 'essentia.js/dist/essentia.js-core.es.js';
-// import essentia-wasm backend
-import { EssentiaWASM } from 'essentia.js/dist/essentia-wasm.es.js';
-// import { TensorflowMusiCNN, EssentiaTensorflowInputExtractor }  from 'essentia.js/dist/essentia.js-model.es.js';
-// import tfPkg from '@tensorflow/tfjs';
-// const { tf } = tfPkg;
-import * as tf from '@tensorflow/tfjs';
-import wav from 'node-wav';
+// import Essentia from 'essentia.js/dist/essentia.js-core.es.js';
+// import { EssentiaWASM } from 'essentia.js/dist/essentia-wasm.es.js';
 
-import ModelsWrapper from './utils/ModelsWrapper.js';
-import modelsAudioPreprocess from './utils/modelsAudioPreprocess.js';
+// import wav from 'node-wav';
+
+// import ModelsWrapper from './utils/ModelsWrapper.js';
+// import modelsAudioPreprocess from './utils/modelsAudioPreprocess.js';
+
+const ModelsWrapper = require('./utils/ModelsWrapper.js');
+const modelsAudioPreprocess = require('./utils/modelsAudioPreprocess.js');
 
 let essentia = null;
+// console.log(Object.keys(wasmModule).toString());
+// console.log(typeof wasmModule.Module);
 essentia = new Essentia(EssentiaWASM);
 console.log("Powered by Essentia.js v." + essentia.version);
 
-const __dirname = path.resolve();
+// const __dirname = path.resolve();
 
 const port = process.env.PORT || 3001;
 
@@ -105,13 +106,13 @@ async function download(id, callback) {
     });
 }
 
-const models = {
-  danceability: await import('./models/danceability-musicnn-msd-2/model.json', { assert: { type: 'json' } }), 
+// const models = {
+//   danceability: await import('./models/danceability-musicnn-msd-2/model.json', { assert: { type: 'json' } }), 
   // moodAggressive: require('./models/mood_aggressive-musicnn-msd-2'), 
   // moodHappy: require('./models/mood_happy-musicnn-msd-2'), 
   // moodRelaxed: require('./models/mood_relaxed-musicnn-msd-2'), 
   // moodSad: require('./models/mood_sad-musicnn-msd-2'), 
-}
+// }
 
 let extractor = null;
 // const musiCNNs = {
