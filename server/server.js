@@ -18,6 +18,11 @@ import ytdl from 'youtube-dl-exec';
 import Essentia from 'essentia.js/dist/essentia.js-core.es.js';
 // import essentia-wasm backend
 import { EssentiaWASM } from 'essentia.js/dist/essentia-wasm.es.js';
+import { TensorflowMusiCNN, EssentiaTFInputExtractor }  from 'essentia.js/dist/essentia.js-model.es.js';
+// import tfPkg from '@tensorflow/tfjs';
+// const { tf } = tfPkg;
+import * as tf from '@tensorflow/tfjs';
+import { decode } from 'wav-decoder';
 
 let essentia = null;
 essentia = new Essentia(EssentiaWASM);
@@ -44,7 +49,7 @@ fs.readdir(path.join(__dirname, "audio"), (err, files) => {
 
 
 app.use(cors({
-  // origin: ['http://127.0.0.1:5500/index.html']
+  // origin: ['http://127.0.0.1:5500/client/index.html']
 }));
 
 app.get('/analyse', (req, res) => {
@@ -65,7 +70,7 @@ async function download(id, callback) {
   const url = "https://www.youtube.com/watch?v=" + id;
   if (downloadedIDs.includes(id)) {
     console.log("audio already downloaded.");
-    analyse(path.join(__dirname, "audio", `${id}.mp4`), callback);
+    read(path.join(__dirname, "audio", `${id}.mp4`), callback);
     return;
   }
 
@@ -76,12 +81,12 @@ async function download(id, callback) {
     output: path.join(__dirname, "audio/%(id)s.%(ext)s"), 
   })
     .then(output => {
-      console.log(output)
+      // console.log(output)
       downloadedIDs.push(id);
       const dir = path.join(__dirname, `audio/${id}.mp4`)
       console.log("audio downloaded at: audio/" + id + ".mp4");
       try {
-        analyse(dir, callback);
+        read(dir, callback);
       } catch (error) {
         callback(null, {
           type: "analysis error", 
@@ -95,42 +100,105 @@ async function download(id, callback) {
         error: error
       });
     });
-
 }
 
-async function analyse(path, callback) {
+const models = {
+  danceability: await import('./models/danceability-musicnn-msd-2/model.json', { assert: { type: 'json' } }), 
+  // moodAggressive: require('./models/mood_aggressive-musicnn-msd-2'), 
+  // moodHappy: require('./models/mood_happy-musicnn-msd-2'), 
+  // moodRelaxed: require('./models/mood_relaxed-musicnn-msd-2'), 
+  // moodSad: require('./models/mood_sad-musicnn-msd-2'), 
+}
+
+let extractor = null;
+const musiCNNs = {
+  danceability: new TensorflowMusiCNN(tf, './models/danceability-musicnn-msd-2', true)
+}
+
+const frameSize = 2048;
+const hopSize = 512;
+
+async function read(path, callback) {
   let audioBuffer;
 
   fs.readFile(path, (err, data) => {
     if (err) {
       callback(null, {
-        type: "Analysis error", 
+        type: "Reading file", 
         error: err
       });
       return;
     }
 
-    audioBuffer = data;
-    const inputSignalVector = essentia.arrayToVector(audioBuffer);
+    // const inputSignalVector = essentia.arrayToVector(audioBuffer);
     
-    let outputRG = essentia.ReplayGain(inputSignalVector, 44100); 
-    // console.log(outputRG.replayGain);
-    let replayGain = outputRG.replayGain;
+    // let outputRG = essentia.ReplayGain(inputSignalVector, 44100); 
+    // // console.log(outputRG.replayGain);
+    // let replayGain = outputRG.replayGain;
   
-    let outputPyYin = essentia.PitchYinProbabilistic(
-      inputSignalVector, 
-      4096, // frameSize 
-      256, // hopSize
-      0.1, // lowRMSThreshold
-      'zero', // outputUnvoiced,
-      false, // preciseTime
-      44100
-    ); //sampleRate
+    // let outputPyYin = essentia.PitchYinProbabilistic(
+    //   inputSignalVector, 
+    //   4096, // frameSize 
+    //   256, // hopSize
+    //   0.1, // lowRMSThreshold
+    //   'zero', // outputUnvoiced,
+    //   false, // preciseTime
+    //   44100
+    // ); //sampleRate
   
-    let pitches = essentia.vectorToArray(outputPyYin.pitch);
-    let voicedProbabilities = essentia.vectorToArray(outputPyYin.voicedProbabilities);
-    callback({replayGain, pitches, voicedProbabilities});
+    // let pitches = essentia.vectorToArray(outputPyYin.pitch);
+    // let voicedProbabilities = essentia.vectorToArray(outputPyYin.voicedProbabilities);
+    // callback({replayGain, pitches, voicedProbabilities});
   });
+}
+
+async function decode(data) {
+  extractor = new EssentiaTFInputExtractor(EssentiaWASM, "musicnn", false);
+  audioBuffer = data;
+  const audioData = await decode(audioBuffer);
+  const channelData = audioData.channelData[0];
+
+  const spectrumFrames = essentia.FrameGenerator(channelData, frameSize, hopSize, true)
+    .map(frame => essentia.Spectrum(frame).spectrum);
+
+  const melBandsFrames = spectrumFrames.map(spectrum => 
+    essentia.MelBands({ spectrum }).melBands
+  );
+
+  console.log("decoded data to melBandsFrames:", melBandsFrames);
+  // let audioData;
+  // decode(audioBuffer)
+  //   .then((data) => {
+  //     audioData = data;
+  //     const channelData = audioData.channelData[0];
+  //   })
+  //   .catch(error => callback(null, {
+  //     type: "Decoding", 
+  //     error: error
+  //   }));
+  
+
+
+  // moodAnalyse(audioBuffer)
+  //   .then((predictions) => {
+  //     console.log(predictions);
+  //     callback({predictions});
+  //   })
+  //   .catch(error => {
+  //     callback(null, {
+  //       type: "Analysis", 
+  //       error: error
+  //     });
+  //   });
+}
+
+async function moodAnalyse(buffer) {
+  const audioData = await extractor.downsampleAudioBuffer(buffer);
+  const features = await extractor.computeFrameWise(audioData, 256);
+  await musicnn.danceability.initialize();
+  const predictions = await musicnn.predict(features, true);
+
+  return predictions;
 }
 
 app.listen(port, (error) => {
